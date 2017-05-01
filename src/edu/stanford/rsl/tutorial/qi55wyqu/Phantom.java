@@ -1,6 +1,9 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
+import edu.stanford.rsl.conrad.utils.VisualizationUtil;
+import ij.ImagePlus;
+import ij.ImageJ;
 
 public class Phantom extends Grid2D {
 
@@ -8,9 +11,27 @@ public class Phantom extends Grid2D {
 		super(size[0], size[1]);
 		this.setSpacing(spacing);
 		this.setOrigin(origin);
-		this.drawEllipse(new int[] {(int)(0.4*size[0]), (int)(0.5*size[1])}, new int[] {(int)(0.2*size[0]), (int)(0.2*size[1])}, 0.3f);
-		this.drawRectangle(new int[] {(int)(0.25*size[0]), (int)(0.25*size[1])}, new int[] {(int)(0.5*size[0]), (int)(0.4*size[1])}, 0.7f);
-		this.drawEllipse(new int[] {(int)(0.6*size[0]), (int)(0.55*size[1])}, new int[] {(int)(0.15*size[0]), (int)(0.3*size[1])}, 0.5f);
+		
+		this.drawEllipse(
+			new int[] {(int)(0.4*size[0]), (int)(0.5*size[1])}, 
+			new int[] {(int)(0.2*size[0]), (int)(0.2*size[1])}, 
+			0.3f
+		);
+		this.drawRectangle(
+			new int[] {(int)(0.25*size[0]), (int)(0.25*size[1])}, 
+			new int[] {(int)(0.5*size[0]), (int)(0.4*size[1])}, 
+			0.7f
+		);
+		this.drawEllipse(
+			new int[] {(int)(0.6*size[0]), (int)(0.55*size[1])}, 
+			new int[] {(int)(0.15*size[0]), (int)(0.3*size[1])}, 
+			0.5f
+		);
+		this.drawTriangle(
+			new int[] {(int)(0.3*size[0]), (int)(0.17*size[1])}, 
+			(int)(0.2*size[0]), 
+			0.9f
+		);
 	}
 		
 	public Phantom(int[] size) {
@@ -54,11 +75,26 @@ public class Phantom extends Grid2D {
 		}
 	}
 	
+	private void drawTriangle(int[] pos, int size, float greyVal) {
+		assert pos[0] + size <= this.getWidth() && pos[1] + size <= this.getHeight()
+			: "The given triangle is too large to fit into the image!";
+		int startX = pos[0];
+		int endX = pos[0] + size;
+		int y = pos[1];
+		while (endX - startX >= 0) {
+			for (int x = startX; x <= endX; x++) {
+				this.setAtIndex(x, y, greyVal);
+			}
+			startX++; endX--; y++;
+		}
+	}
+	
 	public static void main(String[] args) {
-		Phantom testPhantom = new Phantom(
-			new int[] {512, 512}, new double[] {1.0, 1.0}, new double[] {0.0, 0.0}
-		);
-		testPhantom.show();
+		Phantom testPhantom = new Phantom(new int[] {1024, 1024});
+		//testPhantom.show();
+		new ImageJ();
+		ImagePlus img = VisualizationUtil.showGrid2D(testPhantom, "Test Phantom");
+		img.show();
 	}
 
 }
