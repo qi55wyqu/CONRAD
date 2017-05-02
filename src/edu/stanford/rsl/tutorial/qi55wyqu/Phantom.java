@@ -7,9 +7,16 @@ import ij.ImageJ;
 
 public class Phantom extends Grid2D {
 
-	public Phantom(int[] size, double[] spacing, double[] origin) {
+	public Phantom(int[] size, double[] spacing) {
 		super(size[0], size[1]);
 		this.setSpacing(spacing);
+		
+		double[] origin = new double[2];
+		for (int i = 0; i < 2; i++) {
+			// World origin in image center
+			origin[i] = -(size[i]-1)*spacing[i];
+		}
+		
 		this.setOrigin(origin);
 		
 		this.drawEllipse(
@@ -35,7 +42,7 @@ public class Phantom extends Grid2D {
 	}
 		
 	public Phantom(int[] size) {
-		this(size, new double[] {1.0, 1.0}, new double[] {0.0, 0.0});
+		this(size, new double[] {1.0, 1.0});
 	}
 	
 	public Phantom() {
@@ -90,7 +97,7 @@ public class Phantom extends Grid2D {
 	}
 	
 	public static void main(String[] args) {
-		Phantom testPhantom = new Phantom(new int[] {1024, 1024});
+		Phantom testPhantom = new Phantom(new int[] {1024, 1024}, new double[] {2.5, 0.75});
 		//testPhantom.show();
 		new ImageJ();
 		ImagePlus img = VisualizationUtil.showGrid2D(testPhantom, "Test Phantom");
