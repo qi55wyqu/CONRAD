@@ -1,6 +1,8 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
+import edu.stanford.rsl.conrad.data.numeric.NumericPointwiseOperators;
+import edu.stanford.rsl.conrad.data.numeric.InterpolationOperators;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
 import ij.ImagePlus;
 import ij.ImageJ;
@@ -14,9 +16,8 @@ public class Phantom extends Grid2D {
 		double[] origin = new double[2];
 		for (int i = 0; i < 2; i++) {
 			// World origin in image center
-			origin[i] = -(size[i]-1)*spacing[i];
+			origin[i] = -(size[i] - 1) * spacing[i];
 		}
-		
 		this.setOrigin(origin);
 		
 		this.drawEllipse(
@@ -97,11 +98,22 @@ public class Phantom extends Grid2D {
 	}
 	
 	public static void main(String[] args) {
-		Phantom testPhantom = new Phantom(new int[] {1024, 1024}, new double[] {2.5, 0.75});
-		//testPhantom.show();
+
+		Phantom testPhantom = new Phantom(new int[] {1024, 1024}, new double[] {1.0 ,1.0});
 		new ImageJ();
 		ImagePlus img = VisualizationUtil.showGrid2D(testPhantom, "Test Phantom");
 		img.show();
+		/*
+		NumericPointwiseOperators.fill(testPhantom, 1.0f);
+		/testPhantom.show();
+		float interp = InterpolationOperators.interpolateLinear(testPhantom, 500.3, 500.4);
+		System.out.printf("%f\n", interp);
+		double[] phys = testPhantom.indexToPhysical(0, 0);
+		System.out.printf("%f\t%f\n", phys[0], phys[1]);
+		double[] idx = testPhantom.physicalToIndex(300, -500);
+		System.out.printf("%f\t%f\n", idx[0], idx[1]);
+		*/
+		
 	}
 
 }
