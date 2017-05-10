@@ -20,7 +20,6 @@ public class Phantom extends Grid2D {
 		} 
 		this.setOrigin(origin);
 		
-		/*
 		this.drawEllipse(
 			new int[] {(int)(0.4*size[0]), (int)(0.5*size[1])}, 
 			new int[] {(int)(0.2*size[0]), (int)(0.2*size[1])}, 
@@ -41,12 +40,13 @@ public class Phantom extends Grid2D {
 			(int)(0.2*size[0]), 
 			0.9f
 		);
-		*/
+		/*
 		this.drawEllipse(
 			new int[] {(int) (size[0]/2), (int) (size[1]/2)}, 
 			new int[] {(int) (0.25*size[0]), (int) (0.25*size[1])}, 
 			0.5f
 		);
+		*/
 	}
 		
 	public Phantom(int[] size) {
