@@ -19,38 +19,61 @@ public class RadonTransform {
 		int numDetectorPixels, 
 		double detectorSpacing) {
 		
-			double rotationDegrees = 180;
-			double angularIncrement = rotationDegrees / numProjections;
+			final double rotationDegrees = 180;
+			final double sampleSpacing = 0.5;
+			final double angularIncrement = rotationDegrees / numProjections;
+			final double detectorLength = numDetectorPixels * detectorSpacing;
+			final double[] phantomSpacing = phantom.getSpacing();
 		
 			Grid2D sinogram = new Grid2D(numDetectorPixels, numProjections);
-			sinogram.setOrigin(new double[] {-0.5*numDetectorPixels*detectorSpacing, 0.0});
+			sinogram.setOrigin(new double[] {-0.5*detectorLength, 0.0});
 			sinogram.setSpacing(new double[] {detectorSpacing, angularIncrement});
 		
 			Box box = new Box(phantom.getWidth(), phantom.getHeight(), 1);
-			double[] lowerPhantomCornerPhysical = phantom.indexToPhysical(-0.5*phantom.getWidth(), -0.5*phantom.getHeight()); //spacing
-			double[] upperPhantomCornerPhysical = phantom.indexToPhysical(0.5*phantom.getWidth(), 0.5*phantom.getHeight());
-			PointND lowerCorner = new PointND(lowerPhantomCornerPhysical[0], lowerPhantomCornerPhysical[1], 0);
-			PointND upperCorner = new PointND(upperPhantomCornerPhysical[0], upperPhantomCornerPhysical[1], 0);
-			box.setLowerCorner(lowerCorner);
-			box.setUpperCorner(upperCorner);
+			double[] lowerPhantomCornerPhysical = phantom.indexToPhysical(
+				-0.5*phantom.getWidth()*phantomSpacing[0], -0.5*phantom.getHeight()*phantomSpacing[1]);
+			double[] upperPhantomCornerPhysical = phantom.indexToPhysical(
+					0.5*phantom.getWidth()*phantomSpacing[0], 0.5*phantom.getHeight()*phantomSpacing[1]);
+			box.setLowerCorner(new PointND(lowerPhantomCornerPhysical[0], lowerPhantomCornerPhysical[1], 0));
+			box.setUpperCorner(new PointND(upperPhantomCornerPhysical[0], upperPhantomCornerPhysical[1], 0));
 		
-			for (double theta = 0; theta < rotationDegrees; theta += angularIncrement) {
-				for (double s = -0.5*numDetectorPixels*detectorSpacing; s < 0.5*numDetectorPixels; s += detectorSpacing) {
+			for (double theta = 0; theta <= rotationDegrees; theta += angularIncrement) {
+				//System.out.println("Theta = " + theta);
+				for (double s = -0.5*detectorLength; s < 0.5*detectorLength; s += detectorSpacing) {
 					double x = s * Math.cos(Math.toRadians(theta));
 					double y = s * Math.sin(Math.toRadians(theta));
 					PointND currDetPix = new PointND(new double[] {x, y, 0});
-					SimpleVector vec = new SimpleVector(new double[] {-s * Math.sin(Math.toRadians(theta)), s * Math.cos(Math.toRadians(theta)), 0});
+					SimpleVector vec = new SimpleVector(
+						new double[] {-y, x, 0});
 					StraightLine line = new StraightLine(currDetPix, vec);
 					ArrayList<PointND> intersections = box.intersect(line);
+					if (s == -0.5*detectorLength) {
+						System.out.println(line.toString());
+						if (intersections.size() < 2) {
+							System.out.println("error");
+							continue;
+						}
+					}
+					if (intersections.size() < 2) {
+						continue;
+					}
 					double[] firstPoint = intersections.get(0).getCoordinates();
 					double[] secondPoint = intersections.get(1).getCoordinates();
+					
 					float sum = 0f;
-					for (double i = 0; i < phantom.getHeight(); i += 0.5) {
-						double xWorld = firstPoint[0] + i*Math.sin(Math.toRadians(theta));
-						double yWorld = firstPoint[1] + i*Math.cos(Math.toRadians(theta));
+					double xWorld = firstPoint[0];
+					double yWorld = firstPoint[1];
+					double step = 0;
+					while (xWorld <= secondPoint[0] && yWorld <= secondPoint[1]) {
+						xWorld = firstPoint[0] + step * Math.sin(Math.toRadians(theta));
+						yWorld = firstPoint[1] + step * Math.cos(Math.toRadians(theta));
 						double[] idx = phantom.physicalToIndex(xWorld, yWorld);
 						sum += InterpolationOperators.interpolateLinear(phantom, idx[0], idx[1]);
+						step += sampleSpacing;
 					}
+					
+					double[] pointSinogram = sinogram.physicalToIndex(s, theta);
+					sinogram.putPixelValue((int) pointSinogram[0], (int) pointSinogram[1], sum);
 				}
 			}
 			
@@ -61,8 +84,8 @@ public class RadonTransform {
 	public static void main(String[] args) {
 		
 		Phantom phantom = new Phantom(new int[] {512, 512}, new double[] {1.0, 1.0});
-		Grid2D sinogram = radonTransform(phantom, 360, 512, 1.0);
-		
+		Grid2D sinogram = radonTransform(phantom, 512, 512, 1.0);
+		sinogram.show();
 	}
 
 }
