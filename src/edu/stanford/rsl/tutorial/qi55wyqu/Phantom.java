@@ -20,6 +20,7 @@ public class Phantom extends Grid2D {
 		} 
 		this.setOrigin(origin);
 		
+		/*
 		this.drawEllipse(
 			new int[] {(int)(0.4*size[0]), (int)(0.5*size[1])}, 
 			new int[] {(int)(0.2*size[0]), (int)(0.2*size[1])}, 
@@ -39,6 +40,12 @@ public class Phantom extends Grid2D {
 			new int[] {(int)(0.3*size[0]), (int)(0.17*size[1])}, 
 			(int)(0.2*size[0]), 
 			0.9f
+		);
+		*/
+		this.drawEllipse(
+			new int[] {(int) (size[0]/2), (int) (size[1]/2)}, 
+			new int[] {(int) (0.25*size[0]), (int) (0.25*size[1])}, 
+			0.5f
 		);
 	}
 		
@@ -99,13 +106,16 @@ public class Phantom extends Grid2D {
 	
 	public static void main(String[] args) {
 
-		Phantom testPhantom = new Phantom(new int[] {1024, 1024}, new double[] {1.0 ,1.0});
+		Phantom testPhantom = new Phantom(new int[] {1024, 1024}, new double[] {0.5 ,0.75});
 		new ImageJ();
 		ImagePlus img = VisualizationUtil.showGrid2D(testPhantom, "Test Phantom");
 		img.show();
 		/*
 		NumericPointwiseOperators.fill(testPhantom, 1.0f);
-		/testPhantom.show();
+		System.out.println(NumericPointwiseOperators.sum(testPhantom));
+		System.out.println(NumericPointwiseOperators.min(testPhantom));
+		System.out.println(NumericPointwiseOperators.max(testPhantom));
+		testPhantom.show();
 		float interp = InterpolationOperators.interpolateLinear(testPhantom, 500.3, 500.4);
 		System.out.printf("%f\n", interp);
 		double[] phys = testPhantom.indexToPhysical(0, 0);
