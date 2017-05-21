@@ -56,6 +56,7 @@ public class RadonTransform {
 				SimpleVector sampleIncrement = new SimpleVector(intersections.get(1).getAbstractVector());
 				sampleIncrement.subtract(intersections.get(0).getAbstractVector());
 				sampleIncrement.divideBy(distance);
+				sampleIncrement.multiplyBy(sampleSpacing);
 				float sum = 0f;
 				PointND currentPoint = new PointND(intersections.get(0));
 				for (double i = 0; i <= distance; i += sampleSpacing) {
@@ -74,14 +75,23 @@ public class RadonTransform {
 
 	public static void main(String[] args) {
 
+		int[] size = new int[] { 256, 256 };
+		double[] spacing = new double[] {1.5, 1.75};
+		int numProjections = 180;
+		int numDetectorPixels = size[0];
+		double detectorSpacing = 1.0;
+		
 		new ImageJ();
-		Phantom phantom = new Phantom(new int[] { 256, 256 }, new double[] { 1.0, 1.5 });
+		
+		Phantom phantom = new Phantom(size, spacing);
 		ImagePlus phan = VisualizationUtil.showGrid2D(phantom, "Test Phantom");
 		phan.show();
-		Grid2D sinogram = radonTransform(phantom, 180, 256, 1.0);
+		
+		Grid2D sinogram = radonTransform(phantom, numProjections, numDetectorPixels, detectorSpacing);
 		ImagePlus sino1 = VisualizationUtil.showGrid2D(sinogram, "Meins");
 		sino1.show();
-		ParallelProjector2D projector = new ParallelProjector2D(Math.toRadians(180), Math.toRadians(180/180), 256, 1.0);
+
+		ParallelProjector2D projector = new ParallelProjector2D(Math.toRadians(180), Math.toRadians(180/numProjections), numDetectorPixels*detectorSpacing, detectorSpacing);
 		Grid2D sinogram2 = projector.projectRayDriven(phantom);
 		ImagePlus sino2 = VisualizationUtil.showGrid2D(sinogram2, "Offiziell");
 		sino2.show();

@@ -1,8 +1,6 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
-import edu.stanford.rsl.conrad.data.numeric.NumericPointwiseOperators;
-import edu.stanford.rsl.conrad.data.numeric.InterpolationOperators;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
 import ij.ImagePlus;
 import ij.ImageJ;
@@ -13,6 +11,7 @@ public class Phantom extends Grid2D {
 		super(size[0], size[1]);
 		this.setSpacing(spacing);
 		
+		
 		double[] origin = new double[2];
 		for (int i = 0; i < 2; i++) {
 			// World origin in image center
@@ -20,6 +19,7 @@ public class Phantom extends Grid2D {
 		} 
 		this.setOrigin(origin);
 		
+//		this.setOrigin(size[0]/2.d, size[1]/2.d);
 		/*
 		this.drawEllipse(
 			new int[] {(int)(0.4*size[0]), (int)(0.5*size[1])}, 
@@ -43,9 +43,9 @@ public class Phantom extends Grid2D {
 		);
 		*/
 		
-		this.drawEllipse(
+		this.drawCircle(
 			new int[] {(int) (size[0]/2), (int) (size[1]/2)}, 
-			new int[] {(int) (0.25*size[0]), (int) (0.25*size[1])}, 
+			(int) (0.4*getMin(size)), 
 			0.5f
 		);
 		
@@ -67,6 +67,10 @@ public class Phantom extends Grid2D {
 				this.setAtIndex(i, j, greyVal);
 			}
 		}
+	}
+	
+	private void drawCircle(int[] center, int radius, float greyVal) {
+		drawEllipse(center, new int[] {radius,  radius}, greyVal);
 	}
 	
 	private void drawEllipse(int[] center, int[] radii, float greyVal) {
@@ -104,6 +108,16 @@ public class Phantom extends Grid2D {
 			}
 			startX++; endX--; y++;
 		}
+	}
+	
+	private static int getMin(int[] array) {
+		int min = array[0];
+		for (int i = 1; i < array.length; i++) {
+			if (array[i] < min) {
+				min = array[i];
+			}
+		}
+		return min;
 	}
 	
 	public static void main(String[] args) {
