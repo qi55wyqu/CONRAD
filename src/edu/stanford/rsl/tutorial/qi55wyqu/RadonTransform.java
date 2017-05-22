@@ -91,7 +91,7 @@ public class RadonTransform {
 		ImagePlus sino1 = VisualizationUtil.showGrid2D(sinogram, "Meins");
 		sino1.show();
 
-		ParallelProjector2D projector = new ParallelProjector2D(Math.toRadians(180), Math.toRadians(180/numProjections), numDetectorPixels*detectorSpacing, detectorSpacing);
+		ParallelProjector2D projector = new ParallelProjector2D(Math.toRadians(180), Math.toRadians(180/numProjections), numDetectorPixels*		detectorSpacing, detectorSpacing);
 		Grid2D sinogram2 = projector.projectRayDriven(phantom);
 		ImagePlus sino2 = VisualizationUtil.showGrid2D(sinogram2, "Offiziell");
 		sino2.show();
