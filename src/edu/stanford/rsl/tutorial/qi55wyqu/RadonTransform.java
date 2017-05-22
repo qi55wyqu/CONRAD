@@ -22,17 +22,14 @@ public class RadonTransform {
 		final double sampleSpacing = 0.5;
 		final double angularIncrement = rotationDegrees / numProjections;
 		final double detectorLength = numDetectorPixels * detectorSpacing;
-		final double[] phantomSpacing = phantom.getSpacing();
-		final double[] phantomPhysicalSize = new double[] { phantom.getWidth()  * phantomSpacing[0], 
-				                                            phantom.getHeight() * phantomSpacing[1] };
 
 		Grid2D sinogram = new Grid2D(numDetectorPixels, numProjections);
 		sinogram.setOrigin(new double[] { -0.5 * detectorLength, 0.0 });
 		sinogram.setSpacing(new double[] { detectorSpacing, angularIncrement });
 
-		Box box = new Box(phantomPhysicalSize[0], phantomPhysicalSize[1], 1);
-		box.setLowerCorner(new PointND(-phantomPhysicalSize[0] / 2, -phantomPhysicalSize[1] / 2, 0));
-		box.setUpperCorner(new PointND(phantomPhysicalSize[0] / 2, phantomPhysicalSize[1] / 2, 0));
+		Box box = new Box();
+		box.setLowerCorner(new PointND(-(phantom.getWidth()-1) * phantom.getSpacing()[0] / 2, -(phantom.getHeight()-1) * phantom.getSpacing()[1] / 2, 0));
+		box.setUpperCorner(new PointND((phantom.getWidth()-1) * phantom.getSpacing()[0] / 2, (phantom.getHeight()-1) * phantom.getSpacing()[1] / 2, 0));
 
 		for (int thetaIndex = 0; thetaIndex < rotationDegrees; thetaIndex++) {
 			
@@ -76,7 +73,7 @@ public class RadonTransform {
 	public static void main(String[] args) {
 
 		int[] size = new int[] { 256, 256 };
-		double[] spacing = new double[] {1.5, 1.75};
+		double[] spacing = new double[] {1.0, 1.0};
 		int numProjections = 180;
 		int numDetectorPixels = size[0];
 		double detectorSpacing = 1.0;
