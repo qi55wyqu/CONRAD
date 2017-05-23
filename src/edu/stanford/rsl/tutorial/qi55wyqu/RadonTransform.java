@@ -21,10 +21,9 @@ public class RadonTransform {
 		final double rotationDegrees = 180;
 		final double sampleSpacing = 0.5;
 		final double angularIncrement = rotationDegrees / numProjections;
-		final double detectorLength = numDetectorPixels * detectorSpacing;
 
 		Grid2D sinogram = new Grid2D(numDetectorPixels, numProjections);
-		sinogram.setOrigin(new double[] { -0.5 * detectorLength, 0.0 });
+		sinogram.setOrigin(new double[] { -(numDetectorPixels - 1) * detectorSpacing / 2, 0.0 });
 		sinogram.setSpacing(new double[] { detectorSpacing, angularIncrement });
 
 		Box box = new Box();
@@ -40,7 +39,7 @@ public class RadonTransform {
 
 			for (int sIndex = 0; sIndex <= numDetectorPixels; sIndex++) {
 
-				double s = -detectorLength / 2 + sIndex * detectorSpacing;
+				double s = sinogram.indexToPhysical(sIndex, 0)[0];
 
 				PointND currDetPix = new PointND(new double[] { s * cosTheta, s * sinTheta, 0 });
 				SimpleVector dir = new SimpleVector(-sinTheta, cosTheta, 0);
