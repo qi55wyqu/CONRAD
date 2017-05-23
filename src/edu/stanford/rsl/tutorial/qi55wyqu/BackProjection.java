@@ -59,7 +59,7 @@ public class BackProjection {
 		}
 		rampFilter.show();
 		for (int y = 0; y < sinoFourier.getHeight(); y++) {
-			for (int x = 0; x < sinoFourier.getWidth(); x++) {
+			for (int x = 0; x <= sinoFourier.getWidth() / 2; x++) {
 				sinoFourier.multiplyAtIndex(x, y, rampFilter.getRealAtIndex(x), rampFilter.getImagAtIndex(x));
 			}
 		}
