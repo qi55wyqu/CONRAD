@@ -1,7 +1,5 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
-import java.util.ArrayList;
-
 import edu.stanford.rsl.conrad.data.numeric.Grid1DComplex;
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.Grid2DComplex;
@@ -13,11 +11,19 @@ import ij.ImagePlus;
 
 public class BackProjection {
 	
-	public static Grid2D backProjection(Grid2D sinogram, int[] size, double[] spacing) {
+	protected int[] size;
+	protected double[] spacing;
+	
+	public BackProjection(int[] size, double[] spacing) {
+		this.size = size;
+		this.spacing = spacing;
+	}
+	
+	public Grid2D backProject(Grid2D sinogram) {
 		
-		Grid2D backProjection = new Grid2D(size[0], size[1]);
-		backProjection.setSpacing(spacing);
-		backProjection.setOrigin(new double[] {-(size[0] - 1) * spacing[0] / 2, -(size[1] - 1) * spacing[1] / 2});
+		Grid2D backProjection = new Grid2D(this.size[0], this.size[1]);
+		backProjection.setSpacing(this.spacing);
+		backProjection.setOrigin(new double[] {-(this.size[0] - 1) * this.spacing[0] / 2, -(this.size[1] - 1) * this.spacing[1] / 2});
 		
 		for (int y = 0; y < backProjection.getHeight(); y++) {
 			if (y % 50 == 0) {
@@ -44,13 +50,12 @@ public class BackProjection {
 	
 	public static Grid2D rampFilter(Grid2D sinogram) {
 		Grid2DComplex sinoFourier = new Grid2DComplex(sinogram);
-//		sinoFourier.show();
 		sinoFourier.transformForward();
 		Grid1DComplex rampFilter = new Grid1DComplex(sinoFourier.getWidth());
 		rampFilter.setSpacing(1 / (sinogram.getSpacing()[0] * (sinoFourier.getWidth()-sinogram.getWidth())));
-		for (int x = 0; x < rampFilter.getSize()[0] / 2; x++) {
-			rampFilter.setAtIndex(x, x);
-			rampFilter.setAtIndex(rampFilter.getSize()[0]-1-x, x);
+		for (int x = 0; x <= rampFilter.getSize()[0] / 2; x++) {
+			rampFilter.setAtIndex((int) (x/2), x);
+			rampFilter.setAtIndex((int)((rampFilter.getSize()[0]-1-x)/2), x);
 		}
 		rampFilter.show();
 		for (int y = 0; y < sinoFourier.getHeight(); y++) {
@@ -58,19 +63,16 @@ public class BackProjection {
 				sinoFourier.multiplyAtIndex(x, y, rampFilter.getRealAtIndex(x), rampFilter.getImagAtIndex(x));
 			}
 		}
-//		sinoFourier.show();
 		sinoFourier.transformInverse();
-//		sinoFourier.show();
 		Grid2D sinoFiltered = sinoFourier.getRealSubGrid(0, 0, sinogram.getWidth(), sinogram.getHeight());
 		sinoFiltered.setSpacing(sinogram.getSpacing());
 		sinoFiltered.setOrigin(sinogram.getOrigin());
-//		sinoFiltered.show();
 		return sinoFiltered;
 	}
 
 	public static void main(String[] args) {
-
-		int[] size = new int[] { 512, 512 };
+		
+		int[] size = new int[] { 256, 256 };
 		double[] spacing = new double[] {1.0, 1.0};
 		int numProjections = 180;
 		int numDetectorPixels = size[0];
@@ -82,7 +84,8 @@ public class BackProjection {
 		ImagePlus phan = VisualizationUtil.showGrid2D(phantom, "Test Phantom");
 		phan.show();
 		
-		Grid2D sinogram = RadonTransform.radonTransform(phantom, numProjections, numDetectorPixels, detectorSpacing);
+		RadonTransform radonTransform = new RadonTransform(numProjections, numDetectorPixels, detectorSpacing);
+		Grid2D sinogram = radonTransform.transform(phantom);
 		ImagePlus sino = VisualizationUtil.showGrid2D(sinogram, "Radon Transform");
 		sino.show();
 		
@@ -90,11 +93,12 @@ public class BackProjection {
 		ImagePlus sinoFil = VisualizationUtil.showGrid2D(sinoFiltered, "Ramp Filtered");
 		sinoFil.show();
 		
-		Grid2D backProjection = backProjection(sinogram, size, spacing);
-		ImagePlus backProj = VisualizationUtil.showGrid2D(backProjection, "Unfiltered Backprojection");
+		BackProjection backProjection = new BackProjection(size, spacing);
+		Grid2D backProjected = backProjection.backProject(sinogram);
+		ImagePlus backProj = VisualizationUtil.showGrid2D(backProjected, "Unfiltered Backprojection");
 		backProj.show();
 		
-		Grid2D filteredBackProjection = backProjection(sinoFiltered, size, spacing);
+		Grid2D filteredBackProjection = backProjection.backProject(sinoFiltered);
 		ImagePlus filteredBackProj = VisualizationUtil.showGrid2D(filteredBackProjection, "Filtered Backprojection");
 		filteredBackProj.show();
 
