@@ -49,7 +49,7 @@ public class RadonTransform {
 
 			for (int sIndex = 0; sIndex <= this.numDetectorPixels; sIndex++) {
 
-				double s = sinogram.indexToPhysical(sIndex, 0)[0];
+				double s = sinogram.indexToPhysical(sIndex, thetaIndex)[0];
 
 				PointND currDetPix = new PointND(new double[] { s * cosTheta, s * sinTheta, 0 });
 				SimpleVector dir = new SimpleVector(-sinTheta, cosTheta, 0);
