@@ -54,12 +54,13 @@ public class BackProjection {
 	}
 	
 	public static Grid2D rampFilter(Grid2D sinogram) {
-		Grid2DComplex sinoFourier = new Grid2DComplex(sinogram);
-		sinoFourier.transformForward();
-		Grid1DComplex rampFilter = new Grid1DComplex(sinogram.getWidth());
-		rampFilter.setSpacing(1 / (sinogram.getSpacing()[0] * (sinoFourier.getWidth() - sinogram.getWidth())));
+//		Grid2DComplex sinoFourier = new Grid2DComplex(sinogram, false);
+//		sinoFourier.transformForward();
+		Grid1DComplex rampFilter = new Grid1DComplex(sinogram.getWidth(), false);
+		
+//		rampFilter.setSpacing(1 / (sinogram.getSpacing()[0] * (sinoFourier.getWidth() - sinogram.getWidth())));
 //		int width = sinogram.getWidth();
-		int width = sinoFourier.getWidth();
+		int width = rampFilter.getSize()[0];
 		for (int x = 0; x < width / 2; x++) {
 			rampFilter.setAtIndex(x, x);
 		}
@@ -67,10 +68,13 @@ public class BackProjection {
 			rampFilter.setAtIndex(x, width - x);
 		}
 		if (debug) rampFilter.show();
-		for (int y = 0; y < sinoFourier.getHeight(); y++) {
-			for (int x = 0; x < sinoFourier.getWidth(); x++) {
-				sinoFourier.multiplyAtIndex(x, y, rampFilter.getRealAtIndex(x), rampFilter.getImagAtIndex(x));
+		for (int y = 0; y < sinogram.getHeight(); y++) {
+			Grid1DComplex projection = new Grid1DComplex(sinogram.getSubGrid(y), false);
+			projection.transformForward();
+			for (int x = 0; x < sinogram.getWidth(); x++) {
+				projection.multiplyAtIndex(x, rampFilter.getRealAtIndex(x), rampFilter.getImagAtIndex(x));
 			}
+			
 		}
 		sinoFourier.transformInverse();
 		Grid2D sinoFiltered = sinoFourier.getRealSubGrid(0, 0, sinogram.getWidth(), sinogram.getHeight());
@@ -96,11 +100,8 @@ public class BackProjection {
 				ramLak.setRealAtIndex(x, (float) (-1/Math.pow(Math.PI * (width - x), 2)));
 			}
 		}
-		if (debug) {
-			ramLak.show();
-			ramLak.transformForward();
-			ramLak.show();
-		}
+		ramLak.show();
+		ramLak.transformForward();
 		for (int y = 0; y < sinoFourier.getHeight(); y++) {
 			for (int x = 0; x < sinoFourier.getWidth(); x++) {
 				sinoFourier.multiplyAtIndex(x, y, ramLak.getRealAtIndex(x), ramLak.getImagAtIndex(x));
