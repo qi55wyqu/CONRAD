@@ -162,11 +162,9 @@ public class BackProjection {
 //			ramLakKernel.applyToGrid(sinoRamLakFiltered.getSubGrid(y));
 //		}
 
-		
 		Grid2D ramLakFilteredBackProjection = backProjection.backProject(sinoRamLakFiltered);
 		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection");
 		ramLakFilteredBackProj.show();	
-
 
 //		ParallelBackprojector2D backProjection2 = new ParallelBackprojector2D(256, 256, 1, 1);
 //		backProjection2.backprojectPixelDriven(sinogram).show("The Reconstruction");
