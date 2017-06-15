@@ -6,6 +6,7 @@ import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.Grid2DComplex;
 import edu.stanford.rsl.conrad.data.numeric.InterpolationOperators;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
+import edu.stanford.rsl.tutorial.filters.RamLakKernel;
 import edu.stanford.rsl.tutorial.parallel.ParallelBackprojector2D;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -54,42 +55,38 @@ public class BackProjection {
 	}
 	
 	public static Grid2D rampFilter(Grid2D sinogram) {
-//		Grid2DComplex sinoFourier = new Grid2DComplex(sinogram, false);
-//		sinoFourier.transformForward();
-		Grid1DComplex rampFilter = new Grid1DComplex(sinogram.getWidth(), false);
-		
-//		rampFilter.setSpacing(1 / (sinogram.getSpacing()[0] * (sinoFourier.getWidth() - sinogram.getWidth())));
-//		int width = sinogram.getWidth();
-		int width = rampFilter.getSize()[0];
+		int width = sinogram.getWidth();
+		Grid1DComplex rampFilter = new Grid1DComplex(width, false);
+		rampFilter.setSpacing(1 / (sinogram.getSpacing()[0] * (rampFilter.getSize()[0] - width)));
 		for (int x = 0; x < width / 2; x++) {
-			rampFilter.setAtIndex(x, x);
+			rampFilter.setRealAtIndex(x/2, x);
 		}
 		for (int x = width / 2; x < width; x++) {
-			rampFilter.setAtIndex(x, width - x);
+			rampFilter.setRealAtIndex(x/2, (width - x));
 		}
 		if (debug) rampFilter.show();
+		Grid2D sinoFiltered = new Grid2D(sinogram.getWidth(), sinogram.getHeight());
+		sinoFiltered.setSpacing(sinogram.getSpacing());
+		sinoFiltered.setOrigin(sinogram.getOrigin());
 		for (int y = 0; y < sinogram.getHeight(); y++) {
 			Grid1DComplex projection = new Grid1DComplex(sinogram.getSubGrid(y), false);
 			projection.transformForward();
-			for (int x = 0; x < sinogram.getWidth(); x++) {
+			for (int x = 0; x < projection.getSize()[0]; x++) {
 				projection.multiplyAtIndex(x, rampFilter.getRealAtIndex(x), rampFilter.getImagAtIndex(x));
 			}
-			
+			projection.transformInverse();
+			for (int x = 0; x < sinoFiltered.getWidth(); x++) {
+				sinoFiltered.setAtIndex(x, y, projection.getRealAtIndex(x));
+			}
 		}
-		sinoFourier.transformInverse();
-		Grid2D sinoFiltered = sinoFourier.getRealSubGrid(0, 0, sinogram.getWidth(), sinogram.getHeight());
-		sinoFiltered.setSpacing(sinogram.getSpacing());
-		sinoFiltered.setOrigin(sinogram.getOrigin());
 		return sinoFiltered;
 	}
 	
 	public static Grid2D ramLakFilter(Grid2D sinogram) {
-		Grid2DComplex sinoFourier = new Grid2DComplex(sinogram);
-		sinoFourier.transformForward();
-		Grid1DComplex ramLak = new Grid1DComplex(sinogram.getWidth());
-		ramLak.setSpacing(1 / sinogram.getSpacing()[0] * (sinoFourier.getWidth() - sinogram.getWidth()));
+		int width = sinogram.getWidth();
+		Grid1DComplex ramLak = new Grid1DComplex(width, false);
+		ramLak.setSpacing(1 / sinogram.getSpacing()[0] * (ramLak.getSize()[0] - width));
 		ramLak.setAtIndex(0, 0.25f);
-		final int width = ramLak.getSize()[0];
 		for (int x = 1; x < width / 2; x++) {
 			if (x % 2 != 0) {
 				ramLak.setRealAtIndex(x, (float) (-1/Math.pow(Math.PI * x, 2)));
@@ -100,23 +97,29 @@ public class BackProjection {
 				ramLak.setRealAtIndex(x, (float) (-1/Math.pow(Math.PI * (width - x), 2)));
 			}
 		}
-		ramLak.show();
+		if (debug) ramLak.show();
 		ramLak.transformForward();
-		for (int y = 0; y < sinoFourier.getHeight(); y++) {
-			for (int x = 0; x < sinoFourier.getWidth(); x++) {
-				sinoFourier.multiplyAtIndex(x, y, ramLak.getRealAtIndex(x), ramLak.getImagAtIndex(x));
-			}
-		}
-		sinoFourier.transformInverse();
-		Grid2D sinoFiltered = sinoFourier.getRealSubGrid(0, 0, sinogram.getWidth(), sinogram.getHeight());
+		if (debug) ramLak.show();
+		Grid2D sinoFiltered = new Grid2D(sinogram.getWidth(), sinogram.getHeight());
 		sinoFiltered.setSpacing(sinogram.getSpacing());
 		sinoFiltered.setOrigin(sinogram.getOrigin());
+		for (int y = 0; y < sinogram.getHeight(); y++) {
+			Grid1DComplex projection = new Grid1DComplex(sinogram.getSubGrid(y), false);
+			projection.transformForward();
+			for (int x = 0; x < width; x++) {
+				projection.multiplyAtIndex(x, ramLak.getRealAtIndex(x), ramLak.getImagAtIndex(x));
+			}
+			projection.transformInverse();
+			for (int x = 0; x < sinoFiltered.getWidth(); x++) {
+				sinoFiltered.setAtIndex(x, y, projection.getRealAtIndex(x));
+			}
+		}
 		return sinoFiltered;
 	}
 
 	public static void main(String[] args) {
 		
-		int[] size = new int[] { 128, 128 };
+		int[] size = new int[] { 256, 256 };
 		double[] spacing = new double[] {1.0, 1.0};
 		int numProjections = 180;
 		int numDetectorPixels = size[0];
@@ -153,6 +156,12 @@ public class BackProjection {
 			ImagePlus sinoRamLakFil = VisualizationUtil.showGrid2D(sinoRamLakFiltered, "RamLak Filtered");
 			sinoRamLakFil.show();
 		}
+//		Grid2D sinoRamLakFiltered = (Grid2D) sinogram.clone();
+//		RamLakKernel ramLakKernel = new RamLakKernel(sinogram.getWidth(), 1.0);
+//		for (int y = 0; y < sinogram.getHeight(); y++) {
+//			ramLakKernel.applyToGrid(sinoRamLakFiltered.getSubGrid(y));
+//		}
+
 		
 		Grid2D ramLakFilteredBackProjection = backProjection.backProject(sinoRamLakFiltered);
 		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection");
