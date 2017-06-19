@@ -1,7 +1,9 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
+import edu.stanford.rsl.conrad.geometry.shapes.simple.Box;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.Point2D;
+import edu.stanford.rsl.conrad.geometry.shapes.simple.PointND;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -10,7 +12,7 @@ public class FanBeamProjection {
 	
 	protected int numProjections, numDetectorPixels;
 	protected double detectorSpacing, angularIncrement, distSourceIso, distSourceDet;
-	protected double sampleSpacing, detectorLength, gamma, rotationDegress, distDetIso;
+	private double sampleSpacing, detectorLength, gamma, rotationDegress, distDetIso;
 
 	public FanBeamProjection(
 		double detectorSpacing, 
@@ -55,16 +57,21 @@ public class FanBeamProjection {
 		fanogram.setSpacing(new double[] { this.detectorSpacing, this.angularIncrement });
 		fanogram.setOrigin(new double[] { -(this.numDetectorPixels - 1) * this.detectorSpacing / 2, 0.0 });
 		
+		Box box = new Box();
+		box.setLowerCorner(new PointND(-(inputImage.getWidth()-1) * inputImage.getSpacing()[0] / 2, -(inputImage.getHeight()-1) * inputImage.getSpacing()[1] / 2, 0));
+		box.setUpperCorner(new PointND((inputImage.getWidth()-1) * inputImage.getSpacing()[0] / 2, (inputImage.getHeight()-1) * inputImage.getSpacing()[1] / 2, 0));
+		
 		for (int betaIndex = 0; betaIndex < this.rotationDegress; betaIndex++) {
 			
 			double beta = betaIndex * this.angularIncrement;
+			System.out.println("\u03B2" +  " = " + beta + "°");
 			double sourcePosX = Math.cos(Math.toRadians(beta)) * this.distSourceIso;
 			double sourcePosY = Math.sin(Math.toRadians(beta)) * this.distSourceIso;
-			Point2D sourcePos = new Point2D(new double[] { sourcePosX, sourcePosY });
+			PointND sourcePos = new PointND(new double[] { sourcePosX, sourcePosY, 0 });
 			
 			for (int tIndex = 0; tIndex < this.numDetectorPixels; tIndex++) {
 				
-				
+//				double currDetPixX = 
 				
 			}
 		}
