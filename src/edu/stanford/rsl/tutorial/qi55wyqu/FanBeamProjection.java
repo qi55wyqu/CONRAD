@@ -2,7 +2,6 @@ package edu.stanford.rsl.tutorial.qi55wyqu;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.Box;
-import edu.stanford.rsl.conrad.geometry.shapes.simple.Point2D;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.PointND;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
 import ij.ImageJ;
@@ -40,17 +39,26 @@ public class FanBeamProjection {
 		this.distDetIso = this.distSourceDet - this.distSourceIso;
 	}
 	
+	private boolean validGeometry(Grid2D inputImage) {
+		double diag = Math.sqrt(
+				  0.5 * inputImage.getWidth()  * inputImage.getSpacing()[0] 
+				+ 0.5 * inputImage.getHeight() * inputImage.getSpacing()[1]
+			);
+			if (this.distSourceIso <= diag) {
+				System.err.println("Tube will hit object!");
+				return false;
+			}
+			else if (this.distDetIso <= diag) {
+				System.err.println("Detector will hit object!");
+				return false;
+			}
+			return true;
+	}
+	
 	public Grid2D project(Grid2D inputImage) {
 
-		double diag = Math.sqrt(
-			  0.5 * inputImage.getWidth()  * inputImage.getSpacing()[0] 
-			+ 0.5 * inputImage.getHeight() * inputImage.getSpacing()[1]
-		);
-		if (this.distSourceIso <= diag) {
-			System.err.println("Tube will hit object!");
-		}
-		else if (this.distDetIso <= diag) {
-			System.err.println("Detector will hit object!");
+		if (!validGeometry(inputImage)) {
+			return null;
 		}
 		
 		Grid2D fanogram = new Grid2D(this.numDetectorPixels, this.numProjections);
