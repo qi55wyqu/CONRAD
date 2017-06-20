@@ -133,6 +133,26 @@ public class FanBeamProjection {
 		
 	}
 	
+	public Grid2D rebin(Grid2D fanogram) {
+		Grid2D sinogram = new Grid2D(fanogram.getWidth(), fanogram.getHeight());
+		sinogram.setSpacing(fanogram.getSpacing());
+		sinogram.setOrigin(fanogram.getOrigin());
+		for (int tIndex = 0; tIndex < fanogram.getWidth(); tIndex++) {
+			for (int betaIndex = 0; betaIndex < fanogram.getHeight(); betaIndex++) {
+				double[] fanoIdx = fanogram.indexToPhysical(tIndex, betaIndex);
+				double gamma = Math.atan(fanoIdx[0] / this.distSourceDet);
+				double s = this.distSourceIso * Math.sin(gamma);
+				double beta = betaIndex * this.angularIncrement;
+				double theta = beta + gamma;
+				double[] sinoIdx = sinogram.physicalToIndex(s, theta);				
+				float val = InterpolationOperators.interpolateLinear(fanogram, sinoIdx[0], sinoIdx[1]);
+				sinogram.setAtIndex((int) (sinoIdx[0]), (int) (sinoIdx[1]), val);
+			}
+		}
+		
+		return sinogram;
+	}
+	
 	public static void main(String[] args) {
 
 		int[] size = new int[] { 256, 256 };
@@ -141,8 +161,8 @@ public class FanBeamProjection {
 		int numDetectorPixels = 2 * size[0];
 		double detectorSpacing = 1.0;
 		double angularIncrement = 1.0;
-		double distSourceIso = 5000;
-		double distSourceDet = 6000;
+		double distSourceIso = 10 * size[0];
+		double distSourceDet = 20 * size[0];
 		
 		new ImageJ();
 		
@@ -154,6 +174,10 @@ public class FanBeamProjection {
 		Grid2D fanogram = fanBeamProjection.project(phantom);
 		ImagePlus fano1 = VisualizationUtil.showGrid2D(fanogram, "Fanogram");
 		fano1.show();
+		
+		Grid2D sinogram = fanBeamProjection.rebin(fanogram);
+		ImagePlus sino1 = VisualizationUtil.showGrid2D(sinogram, "Rebinned Sinogram");
+		sino1.show();
 
 	}
 
