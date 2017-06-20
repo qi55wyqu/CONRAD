@@ -1,9 +1,14 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
+import java.util.ArrayList;
+
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
+import edu.stanford.rsl.conrad.data.numeric.InterpolationOperators;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.Box;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.Point2D;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.PointND;
+import edu.stanford.rsl.conrad.geometry.shapes.simple.StraightLine;
+import edu.stanford.rsl.conrad.numerics.SimpleVector;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -40,18 +45,27 @@ public class FanBeamProjection {
 		this.distDetIso = this.distSourceDet - this.distSourceIso;
 	}
 	
-	public Grid2D project(Grid2D inputImage) {
-
+	private boolean isValidGeometry(Grid2D inputImage) {
 		double diag = Math.sqrt(
-			  0.5 * inputImage.getWidth()  * inputImage.getSpacing()[0] 
-			+ 0.5 * inputImage.getHeight() * inputImage.getSpacing()[1]
-		);
+				  0.5 * inputImage.getWidth()  * inputImage.getSpacing()[0] 
+				+ 0.5 * inputImage.getHeight() * inputImage.getSpacing()[1]
+			);
 		if (this.distSourceIso <= diag) {
 			System.err.println("Tube will hit object!");
+			return false;
 		}
 		else if (this.distDetIso <= diag) {
 			System.err.println("Detector will hit object!");
+			return false;
 		}
+		return true;
+	}
+	
+	public Grid2D project(Grid2D inputImage) {
+
+//		if (!isValidGeometry(inputImage)) {
+//			return null;
+//		}
 		
 		Grid2D fanogram = new Grid2D(this.numDetectorPixels, this.numProjections);
 		fanogram.setSpacing(new double[] { this.detectorSpacing, this.angularIncrement });
@@ -65,13 +79,44 @@ public class FanBeamProjection {
 			
 			double beta = betaIndex * this.angularIncrement;
 			System.out.println("\u03B2" +  " = " + beta + "°");
-			double sourcePosX = Math.cos(Math.toRadians(beta)) * this.distSourceIso;
-			double sourcePosY = Math.sin(Math.toRadians(beta)) * this.distSourceIso;
+			double cosBeta = Math.cos(Math.toRadians(beta));
+			double sinBeta = Math.sin(Math.toRadians(beta));
+			double sourcePosX = cosBeta * this.distSourceIso;
+			double sourcePosY = sinBeta * this.distSourceIso;
 			PointND sourcePos = new PointND(new double[] { sourcePosX, sourcePosY, 0 });
+			SimpleVector dirSourceDetPerp = new SimpleVector(cosBeta, sinBeta, 0);
+			SimpleVector dirDet = new SimpleVector(-sinBeta, cosBeta, 0);
+			dirDet.multiplyBy(-1);
 			
 			for (int tIndex = 0; tIndex < this.numDetectorPixels; tIndex++) {
 				
-//				double currDetPixX = 
+				double tWorldX = fanogram.indexToPhysical(tIndex, 0)[0];
+
+				SimpleVector currDetPixVec = new SimpleVector(sourcePos.getAbstractVector());
+				currDetPixVec.subtract(dirSourceDetPerp.multipliedBy(this.distSourceDet));
+				currDetPixVec.add(dirDet.multipliedBy(tWorldX));
+				PointND currDetPix = new PointND(currDetPixVec);
+				
+				StraightLine line = new StraightLine(sourcePos, currDetPix);
+				ArrayList<PointND> intersections = box.intersect(line);
+				if (intersections.size() < 2) continue;
+
+				double distance = intersections.get(0).euclideanDistance(intersections.get(1));
+				SimpleVector sampleIncrement = new SimpleVector(intersections.get(1).getAbstractVector());
+				sampleIncrement.subtract(intersections.get(0).getAbstractVector());
+				sampleIncrement.divideBy(distance);
+				sampleIncrement.multiplyBy(this.sampleSpacing);
+				float sum = 0f;
+				PointND currentPoint = new PointND(intersections.get(0));
+				for (double i = 0; i <= distance; i += this.sampleSpacing) {
+			
+					double[] currentIdx = inputImage.physicalToIndex(currentPoint.get(0), currentPoint.get(1));
+					sum += InterpolationOperators.interpolateLinear(inputImage, currentIdx[0], currentIdx[1]);
+					currentPoint.getAbstractVector().add(sampleIncrement);
+					
+				}
+				sum *= this.sampleSpacing;
+				fanogram.setAtIndex(tIndex, betaIndex, sum);
 				
 			}
 		}
@@ -88,8 +133,8 @@ public class FanBeamProjection {
 		int numDetectorPixels = size[0];
 		double detectorSpacing = 1.0;
 		double angularIncrement = 1.0;
-		double distSourceIso = 1.5 * size[0] * spacing[0];
-		double distSourceDet = distSourceIso;
+		double distSourceIso = 5000;
+		double distSourceDet = 1000;
 		
 		new ImageJ();
 		

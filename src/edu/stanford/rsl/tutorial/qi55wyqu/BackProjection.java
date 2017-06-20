@@ -59,10 +59,10 @@ public class BackProjection {
 		Grid1DComplex rampFilter = new Grid1DComplex(width, false);
 		rampFilter.setSpacing(1 / (sinogram.getSpacing()[0] * (rampFilter.getSize()[0] - width)));
 		for (int x = 0; x < width / 2; x++) {
-			rampFilter.setRealAtIndex(x/2, x);
+			rampFilter.setRealAtIndex(x, x);
 		}
 		for (int x = width / 2; x < width; x++) {
-			rampFilter.setRealAtIndex(x/2, (width - x));
+			rampFilter.setRealAtIndex(x, (width - x));
 		}
 		if (debug) rampFilter.show();
 		Grid2D sinoFiltered = new Grid2D(sinogram.getWidth(), sinogram.getHeight());
