@@ -90,9 +90,9 @@ public class FanBeamProjection {
 	
 	public Grid2D project(Grid2D inputImage) {
 
-		if (!isValidGeometry(inputImage)) return null;
-		
 		Grid2D fanogram = new Grid2D(this.numDetectorPixels, this.numProjections);
+		if (!isValidGeometry(inputImage)) return fanogram;
+		
 		fanogram.setSpacing(new double[] { this.detectorSpacing, this.angularIncrement });
 		fanogram.setOrigin(new double[] { -(this.numDetectorPixels - 1) * this.detectorSpacing / 2, 0.0 });
 		
