@@ -16,7 +16,7 @@ public class FanBeamProjection {
 	
 	protected int numProjections, numDetectorPixels;
 	protected double detectorSpacing, angularIncrement, distSourceIso, distSourceDet;
-	private double sampleSpacing, detectorLength, gamma, rotationDegress, distDetIso;
+	private double sampleSpacing, detectorLength, rotationDegress, distDetIso, delta;
 	private double[] beta;
 	private PointND[] sourcePos;
 	private SimpleVector[] dirSourceDet;
@@ -43,9 +43,10 @@ public class FanBeamProjection {
 	private void initialise() {
 		this.sampleSpacing = 0.5;
 		this.detectorLength = this.numDetectorPixels * this.detectorSpacing;
-		this.gamma = Math.atan(0.5 * this.detectorLength / this.distSourceDet);
 		this.rotationDegress = this.numProjections * this.angularIncrement;
 		this.distDetIso = this.distSourceDet - this.distSourceIso;
+		
+		this.delta = Math.atan(0.5 * this.detectorLength / this.distSourceDet);
 		
 		this.beta = new double[this.numProjections];
 		this.sourcePos = new PointND[this.numProjections];
@@ -58,9 +59,7 @@ public class FanBeamProjection {
 			double sinBeta = Math.sin(Math.toRadians(beta));
 			this.sourcePos[betaIndex] = new PointND(new double[] { cosBeta * this.distSourceIso, sinBeta * this.distSourceIso, 0 });
 			this.dirSourceDet[betaIndex] = new SimpleVector(cosBeta, sinBeta, 0);
-			SimpleVector dirDet = new SimpleVector(-sinBeta, cosBeta, 0);
-			dirDet.multiplyBy(-1);
-			this.dirDet[betaIndex] = dirDet;
+			this.dirDet[betaIndex] = new SimpleVector(-sinBeta, cosBeta, 0);
 		}
 		
 	}
@@ -105,7 +104,7 @@ public class FanBeamProjection {
 
 				SimpleVector currDetPixVec = new SimpleVector(this.sourcePos[betaIndex].getAbstractVector());
 				currDetPixVec.subtract(this.dirSourceDet[betaIndex].multipliedBy(this.distSourceDet));
-				currDetPixVec.add(this.dirDet[betaIndex].multipliedBy(fanogram.indexToPhysical(tIndex, 0)[0]));
+				currDetPixVec.subtract(this.dirDet[betaIndex].multipliedBy(fanogram.indexToPhysical(tIndex, 0)[0]));
 				
 				StraightLine line = new StraightLine(this.sourcePos[betaIndex], new PointND(currDetPixVec));
 				ArrayList<PointND> intersections = box.intersect(line);
@@ -137,12 +136,16 @@ public class FanBeamProjection {
 		Grid2D sinogram = new Grid2D(fanogram.getWidth(), fanogram.getHeight());
 		sinogram.setSpacing(fanogram.getSpacing());
 		sinogram.setOrigin(fanogram.getOrigin());
-		for (int tIndex = 0; tIndex < fanogram.getWidth(); tIndex++) {
-			for (int betaIndex = 0; betaIndex < fanogram.getHeight(); betaIndex++) {
-				double[] fanoIdx = fanogram.indexToPhysical(tIndex, betaIndex);
-				double gamma = Math.atan(fanoIdx[0] / this.distSourceDet);
-				double s = this.distSourceIso * Math.sin(gamma);
+		for (int betaIndex = 0; betaIndex < fanogram.getHeight(); betaIndex++) {
+			for (int tIndex = 0; tIndex < fanogram.getWidth(); tIndex++) {
+				double fanoWorldT = fanogram.indexToPhysical(tIndex, betaIndex)[0];
+				double gamma = Math.atan(fanoWorldT / this.distSourceDet);
 				double beta = betaIndex * this.angularIncrement;
+				if (beta >= Math.PI + 2 * gamma && beta <= Math.PI + 2 * this.delta) {
+					beta = beta + 2 * gamma + Math.PI;
+					gamma = -gamma;
+				}
+				double s = this.distSourceIso * Math.sin(gamma);
 				double theta = beta + gamma;
 				double[] sinoIdx = sinogram.physicalToIndex(s, theta);				
 				float val = InterpolationOperators.interpolateLinear(fanogram, sinoIdx[0], sinoIdx[1]);
@@ -178,6 +181,16 @@ public class FanBeamProjection {
 		Grid2D sinogram = fanBeamProjection.rebin(fanogram);
 		ImagePlus sino1 = VisualizationUtil.showGrid2D(sinogram, "Rebinned Sinogram");
 		sino1.show();
+		
+//		BackProjection backProjection = new BackProjection(size, spacing);
+//		Grid2D backProjected = backProjection.backProject(sinogram);
+//		ImagePlus backProj = VisualizationUtil.showGrid2D(backProjected, "Unfiltered Backprojection");
+//		backProj.show();
+//		
+//		Grid2D sinoRamLakFiltered = BackProjection.ramLakFilter(sinogram);
+//		Grid2D ramLakFilteredBackProjection = backProjection.backProject(sinoRamLakFiltered);
+//		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection");
+//		ramLakFilteredBackProj.show();
 
 	}
 
