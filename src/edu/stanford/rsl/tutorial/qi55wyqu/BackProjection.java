@@ -14,7 +14,7 @@ import ij.ImagePlus;
 
 public class BackProjection {
 	
-	final static boolean debug = true;
+	final static boolean debug = false;
 	
 	protected int[] size;
 	protected double[] spacing;
@@ -164,7 +164,7 @@ public class BackProjection {
 
 		Grid2D ramLakFilteredBackProjection = backProjection.backProject(sinoRamLakFiltered);
 		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection");
-		ramLakFilteredBackProj.show();	
+		ramLakFilteredBackProj.show();
 
 //		ParallelBackprojector2D backProjection2 = new ParallelBackprojector2D(256, 256, 1, 1);
 //		backProjection2.backprojectPixelDriven(sinogram).show("The Reconstruction");
