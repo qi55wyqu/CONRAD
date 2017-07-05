@@ -133,9 +133,11 @@ public class FanBeamProjection {
 	}
 	
 	public Grid2D rebin(Grid2D fanogram) {
+		
 		Grid2D sinogram = new Grid2D(fanogram.getWidth(), fanogram.getHeight());
 		sinogram.setSpacing(fanogram.getSpacing());
 		sinogram.setOrigin(fanogram.getOrigin());
+		
 		for (int thetaIndex = 0; thetaIndex < sinogram.getHeight(); thetaIndex++) {
 			for (int sIndex = 0; sIndex < sinogram.getWidth(); sIndex++) {
 				double[] sinoWorld = sinogram.indexToPhysical(sIndex, thetaIndex);
@@ -152,6 +154,7 @@ public class FanBeamProjection {
 				sinogram.setAtIndex(sIndex, thetaIndex, val);
 			}
 		}
+		
 		return sinogram;
 	}
 	
