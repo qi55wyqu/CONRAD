@@ -148,7 +148,7 @@ public class FanBeamProjection {
 				double beta = theta - gamma;
 				double[] fanoIdx = fanogram.physicalToIndex(t, beta);
 				if (fanoIdx[1] > fanogram.getHeight()) {
-					fanoIdx[1] -= 180;
+					fanoIdx[1] -= 180; // erst in physische koordinaten umrechnen!!!
 				}
 				float val = InterpolationOperators.interpolateLinear(fanogram, fanoIdx[0], fanoIdx[1]);
 				sinogram.setAtIndex(sIndex, thetaIndex, val);
