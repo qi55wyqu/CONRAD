@@ -141,10 +141,10 @@ public class FanBeamProjection {
 				double fanoWorldT = fanogram.indexToPhysical(tIndex, betaIndex)[0];
 				double gamma = Math.atan(fanoWorldT / this.distSourceDet);
 				double beta = betaIndex * this.angularIncrement;
-				if (beta >= Math.PI + 2 * gamma && beta <= Math.PI + 2 * this.delta) {
-					beta = beta + 2 * gamma + Math.PI;
-					gamma = -gamma;
-				}
+//				if (beta >= Math.PI + 2 * gamma && beta <= Math.PI + 2 * this.delta) {
+//					beta = beta + 2 * gamma + Math.PI;
+//					gamma = -gamma;
+//				}
 				double s = this.distSourceIso * Math.sin(gamma);
 				double theta = beta + gamma;
 				double[] sinoIdx = sinogram.physicalToIndex(s, theta);				
