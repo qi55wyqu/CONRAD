@@ -144,12 +144,13 @@ public class FanBeamProjection {
 				double s = sinoWorld[0];
 				double theta = sinoWorld[1];
 				double gamma = Math.asin(s / this.distSourceIso);
-				double t = this.distSourceDet * Math.tan(gamma);
 				double beta = theta - gamma;
-				double[] fanoIdx = fanogram.physicalToIndex(t, beta);
-				if (fanoIdx[1] > fanogram.getHeight()) {
-					fanoIdx[1] -= 180; // erst in physische koordinaten umrechnen!!!
+				if (beta < 0) {
+					beta += 2 * gamma + Math.PI;
+					gamma = -gamma;
 				}
+				double t = this.distSourceDet * Math.tan(gamma);
+				double[] fanoIdx = fanogram.physicalToIndex(t, beta);
 				float val = InterpolationOperators.interpolateLinear(fanogram, fanoIdx[0], fanoIdx[1]);
 				sinogram.setAtIndex(sIndex, thetaIndex, val);
 			}
