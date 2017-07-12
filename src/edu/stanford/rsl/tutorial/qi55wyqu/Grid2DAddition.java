@@ -29,7 +29,6 @@ public class Grid2DAddition {
 	
 	public static void CPUAddition(Grid2D inputImage, int numIterations) {
 		Grid2D image = new Grid2D(inputImage);
-		long startTime = System.currentTimeMillis();
 		for (int i = 0; i < numIterations; i++) {
 			for (int y = 0; y < inputImage.getHeight(); y++) {
 				for (int x = 0; x < inputImage.getWidth(); x++) {
@@ -37,8 +36,6 @@ public class Grid2DAddition {
 				}
 			}
 		}
-		long endTime = System.currentTimeMillis() - startTime;
-		System.out.println("Time taken for CPU addition: " + endTime + " ms");
 	}
 	
 	public static void CPUAddition(Grid2D inputImage) {
@@ -77,7 +74,7 @@ public class Grid2DAddition {
 		inputImage.getDelegate().prepareForDeviceOperation();
 		inputImage.getDelegate().getCLBuffer().getBuffer().rewind();
 		CLImage2d<FloatBuffer> inputImageTex = null;
-		inputImageTex = context.createImage2d(inputImage.getDelegate().getCLBuffer().getBuffer(), inputImage.getWidth(), inputImage.getHeight(), format, Mem.READ_WRITE);
+		inputImageTex = context.createImage2d(inputImage.getDelegate().getCLBuffer().getBuffer(), inputImage.getWidth(), inputImage.getHeight(), format, Mem.READ_ONLY);
 		inputImage.getDelegate().release();
 
 //		imageCopy.getDelegate().prepareForDeviceOperation();
@@ -104,21 +101,16 @@ public class Grid2DAddition {
 			.putArg(inputImageTex)
 //			.putArg(imageCopyTex)
 			.putArg(res.getDelegate().getCLBuffer())
-			.putArgs(gImgSize);
+			.putArg(gImgSize);
 		
 		int bpBlockSize[] = {32, 32};
 		int maxWorkGroupSize = device.getMaxWorkGroupSize();
 		int[] realLocalSize = new int[] {Math.min((int) Math.pow(maxWorkGroupSize, 1/2.0), bpBlockSize[0]), Math.min((int) Math.pow(maxWorkGroupSize, 1/2.0), bpBlockSize[1])};
 		int[] globalWorkSize = new int[] {OpenCLUtil.roundUp(realLocalSize[0], (int) imgSize[0]), OpenCLUtil.roundUp(realLocalSize[1], (int) imgSize[1])};	
-		
-		long startTime = System.currentTimeMillis();
-		
+				
 		for (int i = 0; i < numIterations; i++) {
 			commandQueue.put2DRangeKernel(kernelFunction, 0, 0, globalWorkSize[0], globalWorkSize[1], realLocalSize[0], realLocalSize[1]).finish();
 		}
-		
-		long endTime = System.currentTimeMillis() - startTime;
-		System.out.println("Time taken for GPU addition: " + endTime + " ms");
 		
 		res.getDelegate().notifyDeviceChange();
 		
@@ -133,7 +125,20 @@ public class Grid2DAddition {
 		int[] size = {1024, 1024};
 		double[] spacing = {0.5 ,0.75};
 		Grid2D phantom = new Phantom(size, spacing);
+		long cpuStartTime = System.currentTimeMillis();
 		CPUAddition(phantom, 1000);
+		long cpuTimeTaken = System.currentTimeMillis() - cpuStartTime;
+		System.out.println("Time taken for CPU addition: " + cpuTimeTaken + " ms");
+		
+		OpenCLGrid2D openCLPhantom = new OpenCLPhantom(size, spacing);
+		long gpuStartTime = System.currentTimeMillis();
+		GPUAddition(openCLPhantom, 1000);
+		long gpuTimeTaken = System.currentTimeMillis() - gpuStartTime;
+		System.out.println("Time taken for GPU addition: " + gpuTimeTaken + " ms");
+		
+		double factor = Math.round((double) cpuTimeTaken / (double) gpuTimeTaken * 100d) / 100d;
+		System.out.println("Speed up factor = " + factor);
+		
 		
 //		Grid1D phantom1D = new Grid1D(size[0]*size[1]);
 //		for (int y = 0; y < phantom.getHeight(); y++) {
@@ -142,8 +147,6 @@ public class Grid2DAddition {
 //			}
 //		}
 //		OpenCLGrid1D openCLPhantom = new OpenCLGrid1D(phantom1D);
-		OpenCLGrid2D openCLPhantom = new OpenCLPhantom(size, spacing);
-		GPUAddition(openCLPhantom, 1000);
 		
 	}
 	

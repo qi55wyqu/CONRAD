@@ -1,30 +1,19 @@
-typedef float TvoxelValue;
-typedef float Tcoord_dev;
-
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
 
-__kernel void gridAddKernel(__read_only image2d_t g1Tex, __global TvoxelValue* gRes, __constant Tcoord_dev* gVolumeSize) {
+__kernel void gridAddKernel(__read_only image2d_t gInputImageTex, __global float* gResult, __constant float* gImageSize) {
 
-	int gidx = get_group_id(0);
-	int gidy = get_group_id(1);
-	int lidx = get_group_id(0);
-	int lidy = get_group_id(1);
+	int idx = get_group_id(0);
+	int idy = get_group_id(1);
 	
-	int locSizex = get_local_size(0);
-	int locSizey = get_local_size(1);
+	int x = mad24(idx, get_local_size(0), idx);
+	int y = mad24(idy, get_local_size(1), idy);
 	
-	int x = mad24(gidx, locSizex, lidx);
-	int y = mad24(gidy, locSizey, lidy);
-	
-	unsigned int yStride = gVolumeSize[0];
-	
-	if (x >= gVolumeSize[0] || y >= gVolumeSize[1]) {
+	if (x >= gImageSize[0] || y >= gImageSize[1])
 		return;
-	}
 	
-	unsigned long idx = y * yStride + x;
+	unsigned long index = y * gImageSize[0] + x;
 		
-	gRes[idx] += read_imagef(g1Tex, sampler, (float2)(x+0.5f, y+0.5f)).x;
+	gResult[index] += read_imagef(gInputImageTex, sampler, (float2) (x+0.5f, y+0.5f)).x;
 	
 	return;
 
