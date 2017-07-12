@@ -1,6 +1,5 @@
 package edu.stanford.rsl.tutorial.qi55wyqu;
 
-import edu.stanford.rsl.conrad.data.numeric.Grid1D;
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.opencl.OpenCLGrid2D;
 

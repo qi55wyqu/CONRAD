@@ -3,7 +3,7 @@ typedef float Tcoord_dev;
 
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
 
-__kernel void gridAddKernel(__read_only image2d_t g1Tex, __read_only image2d_t g2Tex, __global TvoxelValue* gRes, __constant Tcoord_dev* gVolumeSize) {
+__kernel void gridAddKernel(__read_only image2d_t g1Tex, __global TvoxelValue* gRes, __constant Tcoord_dev* gVolumeSize) {
 
 	int gidx = get_group_id(0);
 	int gidy = get_group_id(1);
@@ -23,11 +23,8 @@ __kernel void gridAddKernel(__read_only image2d_t g1Tex, __read_only image2d_t g
 	}
 	
 	unsigned long idx = y * yStride + x;
-	
-	float val1 = read_imagef(g1Tex, sampler, (float2)(x+0.5f, y+0.5f)).x;
-	float val2 = read_imagef(g2Tex, sampler, (float2)(x+0.5f, y+0.5f)).x;
-	
-	gRes[idx] = val1 + val2;
+		
+	gRes[idx] += read_imagef(g1Tex, sampler, (float2)(x+0.5f, y+0.5f)).x;
 	
 	return;
 

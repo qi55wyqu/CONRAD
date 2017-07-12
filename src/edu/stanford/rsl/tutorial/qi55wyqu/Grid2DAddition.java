@@ -46,7 +46,7 @@ public class Grid2DAddition {
 	}
 	
 	public static void GPUAddition(OpenCLGrid2D inputImage, int numIterations) {
-		OpenCLGrid2D imageCopy = inputImage.clone();
+//		OpenCLGrid2D imageCopy = inputImage.clone();
 		float[] imgSize = new float[2];
 		imgSize[0] = inputImage.getSize()[0];
 		imgSize[1] = inputImage.getSize()[1];
@@ -61,8 +61,10 @@ public class Grid2DAddition {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (program == null)
+		if (program == null) {
+			System.err.println("Build failed");
 			return;
+		}
 		
 		CLKernel kernelFunction = program.createCLKernel("gridAddKernel");
 
@@ -75,16 +77,16 @@ public class Grid2DAddition {
 		inputImage.getDelegate().prepareForDeviceOperation();
 		inputImage.getDelegate().getCLBuffer().getBuffer().rewind();
 		CLImage2d<FloatBuffer> inputImageTex = null;
-		inputImageTex = context.createImage2d(inputImage.getDelegate().getCLBuffer().getBuffer(), inputImage.getWidth(), inputImage.getHeight(), format, Mem.READ_ONLY);
+		inputImageTex = context.createImage2d(inputImage.getDelegate().getCLBuffer().getBuffer(), inputImage.getWidth(), inputImage.getHeight(), format, Mem.READ_WRITE);
 		inputImage.getDelegate().release();
 
-		imageCopy.getDelegate().prepareForDeviceOperation();
-		imageCopy.getDelegate().getCLBuffer().getBuffer().rewind();
-		CLImage2d<FloatBuffer> imageCopyTex = null;
-		imageCopyTex = context.createImage2d(imageCopy.getDelegate().getCLBuffer().getBuffer(), imageCopy.getWidth(), imageCopy.getHeight(), format, Mem.READ_ONLY);
-		imageCopy.getDelegate().release();
+//		imageCopy.getDelegate().prepareForDeviceOperation();
+//		imageCopy.getDelegate().getCLBuffer().getBuffer().rewind();
+//		CLImage2d<FloatBuffer> imageCopyTex = null;
+//		imageCopyTex = context.createImage2d(imageCopy.getDelegate().getCLBuffer().getBuffer(), imageCopy.getWidth(), imageCopy.getHeight(), format, Mem.READ_ONLY);
+//		imageCopy.getDelegate().release();
 		
-		res.getDelegate().prepareForDeviceOperation();
+//		res.getDelegate().prepareForDeviceOperation();
 //		res.getDelegate().getCLBuffer().getBuffer().rewind();
 //		CLImage2d<FloatBuffer> resTex = null;
 //		resTex = context.createImage2d(res.getDelegate().getCLBuffer().getBuffer(), res.getWidth(), res.getHeight(), format, Mem.READ_ONLY);
@@ -92,7 +94,7 @@ public class Grid2DAddition {
 		
 		commandQueue
 			.putWriteImage(inputImageTex, true)
-			.putWriteImage(imageCopyTex, true)
+//			.putWriteImage(imageCopyTex, true)
 			.putWriteBuffer(res.getDelegate().getCLBuffer(), true)
 			.putWriteBuffer(gImgSize, true)
 			.finish();
@@ -100,7 +102,7 @@ public class Grid2DAddition {
 		
 		kernelFunction
 			.putArg(inputImageTex)
-			.putArg(imageCopyTex)
+//			.putArg(imageCopyTex)
 			.putArg(res.getDelegate().getCLBuffer())
 			.putArgs(gImgSize);
 		
