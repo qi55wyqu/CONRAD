@@ -125,7 +125,7 @@ public class BackProjection {
 		OpenCLGrid2D gSinogram = new OpenCLGrid2D(sinogram);
 		OpenCLGrid2D gBackProjection = new OpenCLGrid2D(new Grid2D(this.size[0], this.size[1]));
 		
-		float[] thetaIndexMax = {sinogram.getHeight(), sinogram.getHeight()};
+		int thetaIndexMax = sinogram.getHeight();
 		float[] sinogramSpacing = {(float) sinogram.getSpacing()[0], (float) sinogram.getSpacing()[1]}; 
 		float[] sinogramOrigin = {(float) sinogram.getOrigin()[0], (float) sinogram.getOrigin()[1]};
 		float[] backProjOrigin = {(float) (-(this.size[0] - 1) * this.spacing[0] / 2), (float) (-(this.size[1] - 1) * this.spacing[1] / 2)};
@@ -148,29 +148,29 @@ public class BackProjection {
 		}
 		CLKernel kernelFunction = program.createCLKernel("backProjectionKernel");
 		
-		CLBuffer<FloatBuffer> gThetaIndexMax = context.createFloatBuffer(thetaIndexMax.length, Mem.READ_ONLY);
-		gThetaIndexMax.getBuffer().put(thetaIndexMax);
-		gThetaIndexMax.getBuffer().rewind();
-		
-		CLBuffer<FloatBuffer> gSinogramSpacing = context.createFloatBuffer(sinogramSpacing.length, Mem.READ_ONLY);
-		gSinogramSpacing.getBuffer().put(sinogramSpacing);
-		gSinogramSpacing.getBuffer().rewind();
-		
-		CLBuffer<FloatBuffer> gSinogramOrigin = context.createFloatBuffer(sinogramOrigin.length, Mem.READ_ONLY);
-		gSinogramOrigin.getBuffer().put(sinogramOrigin);
-		gSinogramOrigin.getBuffer().rewind();
-		
-		CLBuffer<FloatBuffer> gBackProjSpacing = context.createFloatBuffer(backProjSpacing.length, Mem.READ_ONLY);
-		gBackProjSpacing.getBuffer().put(backProjSpacing);
-		gBackProjSpacing.getBuffer().rewind();
-		
-		CLBuffer<FloatBuffer> gBackProjOrigin = context.createFloatBuffer(backProjOrigin.length, Mem.READ_ONLY);
-		gBackProjOrigin.getBuffer().put(backProjOrigin);
-		gBackProjOrigin.getBuffer().rewind();
-		
-		CLBuffer<FloatBuffer> gBackProjSize = context.createFloatBuffer(backProjSize.length, Mem.READ_ONLY);
-		gBackProjSize.getBuffer().put(backProjSize);
-		gBackProjSize.getBuffer().rewind();
+//		CLBuffer<FloatBuffer> gThetaIndex = context.createFloatBuffer(thetaIndex.length, Mem.READ_ONLY);
+//		gThetaIndex.getBuffer().put(thetaIndex);
+//		gThetaIndex.getBuffer().rewind();
+//		
+//		CLBuffer<FloatBuffer> gSinogramSpacing = context.createFloatBuffer(sinogramSpacing.length, Mem.READ_ONLY);
+//		gSinogramSpacing.getBuffer().put(sinogramSpacing);
+//		gSinogramSpacing.getBuffer().rewind();
+//		
+//		CLBuffer<FloatBuffer> gSinogramOrigin = context.createFloatBuffer(sinogramOrigin.length, Mem.READ_ONLY);
+//		gSinogramOrigin.getBuffer().put(sinogramOrigin);
+//		gSinogramOrigin.getBuffer().rewind();
+//		
+//		CLBuffer<FloatBuffer> gBackProjSpacing = context.createFloatBuffer(backProjSpacing.length, Mem.READ_ONLY);
+//		gBackProjSpacing.getBuffer().put(backProjSpacing);
+//		gBackProjSpacing.getBuffer().rewind();
+//		
+//		CLBuffer<FloatBuffer> gBackProjOrigin = context.createFloatBuffer(backProjOrigin.length, Mem.READ_ONLY);
+//		gBackProjOrigin.getBuffer().put(backProjOrigin);
+//		gBackProjOrigin.getBuffer().rewind();
+//		
+//		CLBuffer<FloatBuffer> gBackProjSize = context.createFloatBuffer(backProjSize.length, Mem.READ_ONLY);
+//		gBackProjSize.getBuffer().put(backProjSize);
+//		gBackProjSize.getBuffer().rewind();
 
 		CLImageFormat format = new CLImageFormat(ChannelOrder.INTENSITY, ChannelType.FLOAT);
 		
@@ -179,37 +179,35 @@ public class BackProjection {
 		CLImage2d<FloatBuffer> gSinogramTex = null;
 		gSinogramTex = context.createImage2d(gSinogram.getDelegate().getCLBuffer().getBuffer(), gSinogram.getWidth(), gSinogram.getHeight(), format, Mem.READ_ONLY);
 		gSinogram.getDelegate().release();
+		
+		gBackProjection.getDelegate().prepareForDeviceOperation();
 				
-//		__kernel void backProjectionKernel(
-//				__read_only image2d_t sinogram, 
-//				__constant float thetaIndex, 
-//				__constant float* sinogramSpacing, 
-//				__constant float* sinogramOrigin, 
-//				__constant float* backProjSpacing, 
-//				__constant float* backProjOrigin, 
-//				__global float* backProjection, 
-//				_constant float* backProjSize) {
 		commandQueue
 		.putWriteImage(gSinogramTex, true)
-		.putWriteBuffer(gThetaIndexMax, true)
-		.putWriteBuffer(gSinogramSpacing, true)
-		.putWriteBuffer(gSinogramOrigin, true)
-		.putWriteBuffer(gBackProjSpacing, true)
-		.putWriteBuffer(gBackProjOrigin, true)
+//		.putWriteBuffer(gThetaIndex, true)
+//		.putWriteBuffer(gSinogramSpacing, true)
+//		.putWriteBuffer(gSinogramOrigin, true)
+//		.putWriteBuffer(gBackProjSpacing, true)
+//		.putWriteBuffer(gBackProjOrigin, true)
 		.putWriteBuffer(gBackProjection.getDelegate().getCLBuffer(), true)
-		.putWriteBuffer(gBackProjSize, true)
+//		.putWriteBuffer(gBackProjSize, true)
 		.finish();
 		
 		kernelFunction.rewind();
 		kernelFunction
 			.putArg(gSinogramTex)
-			.putArg(gThetaIndexMax)
-			.putArg(gSinogramSpacing)
-			.putArg(gSinogramOrigin)
-			.putArg(gBackProjSpacing)
-			.putArg(gBackProjOrigin)
+			.putArg(sinogramSpacing[0])
+			.putArg(sinogramSpacing[1])
+			.putArg(sinogramOrigin[0])
+			.putArg(sinogramOrigin[1])
 			.putArg(gBackProjection.getDelegate().getCLBuffer())
-			.putArg(gBackProjSize);
+			.putArg(backProjSpacing[0])
+			.putArg(backProjSpacing[1])
+			.putArg(backProjOrigin[0])
+			.putArg(backProjOrigin[1])
+			.putArg(backProjSize[0])
+			.putArg(backProjSize[1])
+			.putArg(thetaIndexMax);
 
 		int bpBlockSize[] = {32, 32};
 		int maxWorkGroupSize = device.getMaxWorkGroupSize();
@@ -217,8 +215,11 @@ public class BackProjection {
 		int[] globalWorkSize = new int[] {OpenCLUtil.roundUp(realLocalSize[0], (int) backProjSize[0]), OpenCLUtil.roundUp(realLocalSize[1], (int) backProjSize[1])};	
 
 		commandQueue.put2DRangeKernel(kernelFunction, 0, 0, globalWorkSize[0], globalWorkSize[1], realLocalSize[0], realLocalSize[1]).finish();
-			
+		
 		gBackProjection.getDelegate().notifyDeviceChange();
+		commandQueue.release();
+  	    kernelFunction.release();
+  	    program.release();
 		
 		Grid2D backProjection = new Grid2D(gBackProjection);
 		backProjection.setSpacing(this.spacing);
