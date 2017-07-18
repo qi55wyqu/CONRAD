@@ -9,6 +9,7 @@ import edu.stanford.rsl.conrad.geometry.shapes.simple.PointND;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.StraightLine;
 import edu.stanford.rsl.conrad.numerics.SimpleVector;
 import edu.stanford.rsl.conrad.utils.VisualizationUtil;
+import edu.stanford.rsl.tutorial.phantoms.SheppLogan;
 import ij.ImageJ;
 import ij.ImagePlus;
 
@@ -164,8 +165,8 @@ public class FanBeamProjection {
 		int[] size = new int[] { 256, 256 };
 		double[] spacing = new double[] {1.0, 1.0};
 		int numProjections = 360;
-		int numDetectorPixels = 2 * size[0];
-		double detectorSpacing = 1.0;
+		int numDetectorPixels = 4 * size[0];
+		double detectorSpacing = 0.6;
 		double angularIncrement = 1.0;
 		double distSourceIso = 20 * size[0];
 		double distSourceDet = 50 * size[0];
@@ -176,6 +177,13 @@ public class FanBeamProjection {
 		ImagePlus phan = VisualizationUtil.showGrid2D(phantom, "Test Phantom");
 		phan.show();
 		
+//		Grid2D phantom = new SheppLogan(256);
+//		phantom.setOrigin(new double[] {-(256 - 1) * 0.5 * spacing[0], -(256 - 1) * 0.5 * spacing[1]});
+//		phantom.setSpacing(spacing);
+		
+//		ImagePlus phan = VisualizationUtil.showGrid2D(phantom, "Test Phantom");
+//		phan.show();
+		
 		FanBeamProjection fanBeamProjection = new FanBeamProjection(detectorSpacing, numDetectorPixels, angularIncrement, numProjections, distSourceIso, distSourceDet);
 		Grid2D fanogram = fanBeamProjection.project(phantom);
 		ImagePlus fano1 = VisualizationUtil.showGrid2D(fanogram, "Fanogram");
@@ -185,21 +193,27 @@ public class FanBeamProjection {
 		ImagePlus sino1 = VisualizationUtil.showGrid2D(sinogram, "Rebinned Sinogram");
 		sino1.show();
 		
-		RadonTransform radonTransform = new RadonTransform(numProjections, numDetectorPixels, detectorSpacing);
-		Grid2D sinogram2 = radonTransform.transform(phantom);
-		ImagePlus sino2 = VisualizationUtil.showGrid2D(sinogram2, "Sinogram");
-		sino1.show();
+//		RadonTransform radonTransform = new RadonTransform(numProjections, numDetectorPixels, detectorSpacing);
+//		Grid2D sinogram2 = radonTransform.transform(phantom);
+//		ImagePlus sino2 = VisualizationUtil.showGrid2D(sinogram2, "Sinogram");
+//		sino1.show();
 		
 		BackProjection backProjection = new BackProjection(size, spacing);
-		Grid2D backProjected = backProjection.backProject(sinogram);
-		ImagePlus backProj = VisualizationUtil.showGrid2D(backProjected, "Unfiltered Backprojection, Rebinned Sinogram");
-		backProj.show();
+//		Grid2D backProjected = backProjection.backProject(sinogram);
+//		ImagePlus backProj = VisualizationUtil.showGrid2D(backProjected, "Unfiltered Backprojection, Rebinned Sinogram");
+//		backProj.show();
 		
 		Grid2D sinoRamLakFiltered = BackProjection.ramLakFilter(sinogram);
 		
-		Grid2D ramLakFilteredBackProjection = backProjection.backProject(sinoRamLakFiltered);
-		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection, Rebinned Sinogram");
+		Grid2D ramLakFilteredBackProjection = backProjection.backProjectOnGPU(sinoRamLakFiltered);
+		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection, GPU");
 		ramLakFilteredBackProj.show();
+		
+		Grid2D ramLakFilteredBackProjection2 = backProjection.backProject(sinoRamLakFiltered);
+		ImagePlus ramLakFilteredBackProj2 = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection, CPU");
+		ramLakFilteredBackProj2.show();
+		
+		
 
 	}
 

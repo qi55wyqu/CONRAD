@@ -16,11 +16,8 @@ __kernel void backProjectionKernel(
 	int thetaIndexMax) {
 
 	
-	int IDx = get_group_id(0);
-	int IDy = get_group_id(1);
-	
-	int x = mad24(IDx, get_local_size(0), IDx);
-	int y = mad24(IDy, get_local_size(1), IDy);
+	int x = get_global_id(0);
+	int y = get_global_id(1);
 	
 	if (x >= backProjSizeX || y >= backProjSizeY)
 		return;

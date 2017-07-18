@@ -28,17 +28,17 @@ public class Phantom extends Grid2D {
 		this.drawRectangle(
 			new int[] {(int)(0.25*size[0]), (int)(0.25*size[1])}, 
 			new int[] {(int)(0.5*size[0]), (int)(0.4*size[1])}, 
-			0.7f
+			0.31f
 		);
 		this.drawEllipse(
 			new int[] {(int)(0.6*size[0]), (int)(0.55*size[1])}, 
 			new int[] {(int)(0.15*size[0]), (int)(0.3*size[1])}, 
-			0.5f
+			0.32f
 		);
 		this.drawTriangle(
 			new int[] {(int)(0.3*size[0]), (int)(0.17*size[1])}, 
 			(int)(0.2*size[0]), 
-			0.9f
+			0.33f
 		);
 		
 		/*

@@ -296,7 +296,7 @@ public class BackProjection {
 		
 		int[] size = new int[] { 256, 256 };
 		double[] spacing = new double[] {1.0, 1.0};
-		int numProjections = 180;
+		int numProjections = 360;
 		int numDetectorPixels = 2 * size[0];
 		double detectorSpacing = 1.0;
 		
@@ -334,8 +334,11 @@ public class BackProjection {
 
 //		Grid2D ramLakFilteredBackProjection = backProjection.backProjectNoHelp(sinoRamLakFiltered);
 		Grid2D ramLakFilteredBackProjection = backProjection.backProjectOnGPU(sinoRamLakFiltered);
+		Grid2D ramLakFilteredBackProjection2 = backProjection.backProject(sinoRamLakFiltered);
 		ImagePlus ramLakFilteredBackProj = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection");
 		ramLakFilteredBackProj.show();
+		ImagePlus ramLakFilteredBackProj2 = VisualizationUtil.showGrid2D(ramLakFilteredBackProjection, "RamLak-filtered Backprojection");
+		ramLakFilteredBackProj2.show();
 
 //		ParallelBackprojector2D backProjection2 = new ParallelBackprojector2D(256, 256, 1, 1);
 //		backProjection2.backprojectPixelDriven(sinogram).show("The Reconstruction");
